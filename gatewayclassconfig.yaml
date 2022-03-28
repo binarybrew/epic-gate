@@ -1,0 +1,23 @@
+apiVersion: puregw.acnodal.io/v1
+kind: GatewayClassConfig
+metadata:
+  name: uswest-gatewayhttp
+  namespace: epic-gateway
+spec:
+  epic:
+    gateway-hostname: uswest.epick8sgw.io
+    service-account: testacct
+    service-key: acnodal123
+    user-namespace: epictest
+    gateway-template: gatewayhttp
+  trueIngress:
+    decapAttachment:
+      direction: ingress
+      interface: default
+      flags: 1
+      qid: 0
+    encapAttachment:
+      direction: egress
+      interface: default
+      flags: 16
+      qid: 1
