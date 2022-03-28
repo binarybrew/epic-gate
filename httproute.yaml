@@ -1,0 +1,13 @@
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: HTTPRoute
+metadata:
+  name: uswest-demows
+spec:
+  parentRefs:
+  - name: uswest-gatewayhttp
+    namespace: gtw-test
+  rules:
+  - backendRefs:
+    - name: epic-demows
+      namespace: gtw-test
+      port: 8080
