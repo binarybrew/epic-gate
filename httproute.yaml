@@ -4,7 +4,7 @@ metadata:
   name: uswest-demows
 spec:
   parentRefs:
-  - name: uswest-gatewayhttp
+  - name: uswest-demows
     namespace: gtw-test
   rules:
   - backendRefs:
