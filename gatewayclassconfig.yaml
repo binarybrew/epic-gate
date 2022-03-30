@@ -5,10 +5,11 @@ metadata:
   namespace: epic-gateway
 spec:
   epic:
-    gateway-hostname: uswest.epick8sgw.io
-    service-account: testacct
-    service-key: acnodal123
-    user-namespace: epictest
+    client-name: yourclustername
+    gateway-hostname: epicgwhostname
+    service-account: yourserviceaccount
+    service-key: yourservicekey
+    user-namespace: yourepicnamespace
     gateway-template: gatewayhttp
   trueIngress:
     decapAttachment:
