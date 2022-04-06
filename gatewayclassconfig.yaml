@@ -6,7 +6,7 @@ metadata:
 spec:
   epic:
     client-name: yourclustername
-    gateway-hostname: epicgwhostname
+    gateway-hostname: uswest.epick8sgw.io
     service-account: yourserviceaccount
     service-key: yourservicekey
     user-namespace: yourepicnamespace
