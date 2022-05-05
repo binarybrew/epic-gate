@@ -32,3 +32,7 @@ These configuration samples are used in conjunction with the [Getting Started Gu
 
 
 
+## Gateway Templates
+Each gateway is created from a template contained in the user namespace.  When a new user is created default templates are loaded into the user namespace.  The default samples are located in gwp_templates
+
+

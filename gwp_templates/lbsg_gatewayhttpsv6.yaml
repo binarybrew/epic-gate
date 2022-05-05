@@ -1,0 +1,154 @@
+apiVersion: epic.acnodal.io/v1
+kind: LBServiceGroup
+metadata:
+  labels:
+    app.kubernetes.io/component: lbservicegroup
+    app.kubernetes.io/part-of: epic
+    epic.acnodal.io/owning-account: USERNAMESPACE
+    epic.acnodal.io/owning-serviceprefix: default-ipv6
+  name: gatewayhttpsv6
+  namespace: epic-USERNAMESPACE
+spec:
+  can-be-shared: false
+  endpoint-template:
+    dnsName: '{{.ClusterServiceName}}-{{.ClusterServiceNS}}-{{.Account}}-uswest.epick8sgw.net'
+    recordTTL: 180
+  envoy-replica-count: 1
+  envoy-template:
+    envoyAPI: v3
+    envoyResources:
+      clusters:
+      - name: SET_BY_EPIC
+        value: |
+          name: {{.ClusterName}}
+          connect_timeout: 2s
+          type: EDS
+          eds_cluster_config:
+            eds_config:
+              resource_api_version: V3
+              api_config_source:
+                api_type: GRPC
+                transport_api_version: V3
+                grpc_services:
+                - envoy_grpc:
+                    cluster_name: eds-server
+          lb_policy: ROUND_ROBIN
+          health_checks:
+          - interval: 5s
+            timeout: 5s
+            no_traffic_interval: 5s
+            unhealthy_threshold: 3
+            healthy_threshold: 3
+            tcp_health_check: {}
+      endpoints:
+      - name: SET_BY_EPIC
+        value: |
+          cluster_name: {{.ClusterName}}
+          {{- if .Endpoints}}
+          endpoints:
+          - lb_endpoints:
+          {{- range .Endpoints}}
+            - endpoint:
+                address:
+                  socket_address:
+                    address: {{.Spec.Address}}
+                    protocol: {{.Spec.Port.Protocol | ToUpper}}
+                    port_value: {{.Spec.Port.Port}}
+          {{- end}}
+          {{- end}}
+      listeners:
+      - name: SET_BY_EPIC
+        value: |
+          name: {{.PortName}}
+          address:
+            socket_address:
+              address: "::"
+              ipv4_compat: yes
+              port_value: {{.Port}}
+              protocol: {{.Protocol | ToUpper}}
+          filter_chains:
+          - filters:
+            - name: envoy.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: {{ .ServiceName }}
+                server_name: epicuswest
+                add_user_agent: true
+                use_remote_address: true
+                via: epicuswest
+                route_config:
+                  name: local_route
+                  virtual_hosts:
+                  {{- range .Routes }}
+                  {{- $route := .Spec.HTTP }}
+                  {{- range $route.Hostnames | HostnameOrDefault }}
+                  - name: "{{ . }}"
+                    domains:
+                    - "{{ . }}"
+                    {{- if $route.Rules}}
+                    routes:
+                    {{- range $route.Rules}}
+                    {{- $rule := . }}
+                    {{- if .Matches }}
+                    {{- range .Matches }}
+                    - route:
+                        weighted_clusters:
+                          clusters:
+                          {{- range $rule.BackendRefs}}
+                          - name: {{ .Name }}
+                            weight: {{ .Weight }}
+                          {{- end }}
+                          total_weight: {{ $rule.BackendRefs | RefWeightsTotal }}
+                      match:
+                        {{- if .Path.Type | PathTypePathPrefix }}
+                        prefix: "{{ .Path.Value }}"
+                        {{- end }}
+                        {{- if .Path.Type | PathTypeExact }}
+                        path: "{{ .Path.Value }}"
+                        {{- end }}
+                        {{- if .Headers }}
+                        headers:
+                        {{- range .Headers }}
+                        - name: "{{ .Name }}"
+                          string_match:
+                          {{- if .Type | HeaderTypeRegex }}
+                            safe_regex:
+                              google_re2: {}
+                              regex: "{{ .Value }}"
+                          {{- else }}
+                            exact: "{{ .Value }}"
+                          {{- end }}
+                        {{- end }}
+                        {{- end }}
+                    {{- end }}
+                    {{- end }}
+                    {{- end }}
+                    {{- end }}
+                  {{- end }}
+                  {{- end }}
+                http_filters:
+                - name: envoy.filters.http.bandwidth_limit
+                  typed_config:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.bandwidth_limit.v3.BandwidthLimit
+                    stat_prefix: bandwidth_limiter_default
+                    enable_mode: REQUEST_AND_RESPONSE
+                    limit_kbps: 1000
+                    fill_interval: 0.1s
+                - name: envoy.filters.http.router
+            transport_socket:
+              name: envoy.transport_socket.tls
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+                common_tls_context:
+                  tls_certificate_sds_secret_configs:
+                    - name: wildcard-https-cert
+                      sds_config:
+                        resource_api_version: V3
+                        ads: {}
+      secrets:
+      - name: wildcard-https-cert
+        ref:
+          name: wildcard-epick8sgw-net-tls
+          namespace: epic-USERNAMESPACE
+    nodeID: SET_BY_EPIC
+    serialization: yaml
