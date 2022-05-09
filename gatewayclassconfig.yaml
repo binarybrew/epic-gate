@@ -20,5 +20,5 @@ spec:
     encapAttachment:
       direction: egress
       interface: default
-      flags: 20
+      flags: 16
       qid: 1
