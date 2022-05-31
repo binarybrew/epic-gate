@@ -1,0 +1,120 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: epic-demows
+  namespace: gtw-test
+  labels:
+    app.kubernetes.io/name: epic-demows
+    app.kubernetes.io/part-of: epic
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: epic-demows
+  namespace: gtw-test
+  labels:
+    app.kubernetes.io/name: epic-demows
+    app.kubernetes.io/part-of: epic
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - services
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - gateway.networking.k8s.io
+  resources:
+  - gateways
+  - httproutes
+  verbs:
+  - get
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: epic-demows
+  namespace: gtw-test
+  labels:
+    app.kubernetes.io/name: epic-demows
+    app.kubernetes.io/part-of: epic
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: epic-demows
+subjects:
+- kind: ServiceAccount
+  name: epic-demows
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: epic-demows
+  namespace: gtw-test
+  labels:
+    app.kubernetes.io/name: epic-demows
+    app.kubernetes.io/part-of: epic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: epic-demows
+      app.kubernetes.io/part-of: epic
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: epic-demows
+        app.kubernetes.io/part-of: epic
+    spec:
+      containers:
+      - name: epic-demows
+        image: registry.gitlab.com/acnodal/epic-echoserver:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: POD_HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        volumeMounts:
+        - name: podinfo
+          mountPath: /etc/podinfo
+      serviceAccount: epic-demows
+      volumes:
+      - name: podinfo
+        downwardAPI:
+          items:
+          - path: labels
+            fieldRef:
+              fieldPath: metadata.labels
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: epic-demows
+  namespace: gtw-test
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: epic-demows
+  ports:
+  - port: 80
+    targetPort: 8080
+    name: http

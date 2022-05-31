@@ -2,6 +2,7 @@ apiVersion: gateway.networking.k8s.io/v1alpha2
 kind: Gateway
 metadata:
   name: uswest-demows
+  namespace: gtw-test
 spec:
   gatewayClassName: uswest-gatewayhttp
   listeners:

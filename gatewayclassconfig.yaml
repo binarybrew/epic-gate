@@ -5,12 +5,12 @@ metadata:
   namespace: epic-gateway
 spec:
   epic:
-    cluster-name: yourclustername
-    gateway-hostname: uswest.epick8sgw.io
     service-account: yourserviceaccount
     service-key: yourservicekey
     user-namespace: yourepicnamespace
-    gateway-template: gatewayhttp
+    gateway-hostname: uswest.epick8sgw.io
+    gateway-template: gatewayhttpv6
+    cluster-name: getting-started
   trueIngress:
     decapAttachment:
       direction: ingress
