@@ -2,6 +2,7 @@ apiVersion: gateway.networking.k8s.io/v1alpha2
 kind: HTTPRoute
 metadata:
   name: uswest-demows
+  namespace: gtw-test
 spec:
   parentRefs:
   - name: uswest-demows
