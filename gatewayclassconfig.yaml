@@ -5,12 +5,12 @@ metadata:
   namespace: epic-gateway
 spec:
   epic:
-    service-account: yourserviceaccount
-    service-key: yourservicekey
-    user-namespace: yourepicnamespace
+    service-account: service-account
+    service-key: IDrive100Miles!
+    user-namespace: boat
     gateway-hostname: uswest.epick8sgw.io
-    gateway-template: gatewayhttpv6
-    cluster-name: getting-started
+    gateway-template: gatewayhttp
+    cluster-name: getting-started-ray
   trueIngress:
     decapAttachment:
       direction: ingress
